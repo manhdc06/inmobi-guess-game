@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Đoán Số</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0f172a; --bg2:#1e1b4b; --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.12);
+    --text:#f1f5f9; --muted:#94a3b8; --primary:#6366f1; --primary2:#a855f7; --gold:#fbbf24;
+    --ok:#22c55e; --bad:#f43f5e; --input:rgba(15,23,42,.6);
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; color:var(--text);
+    font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 10% -10%, #312e81 0%, transparent 60%),
+               radial-gradient(900px 500px at 110% 10%, #581c87 0%, transparent 55%),
+               linear-gradient(160deg, var(--bg) 0%, var(--bg2) 100%);
+    background-attachment:fixed;
+  }
+  header { text-align:center; padding:40px 16px 8px; }
+  header h1 {
+    margin:0; font-size:clamp(28px,5vw,44px); font-weight:800; letter-spacing:-.5px;
+    background:linear-gradient(90deg,#c7d2fe,#f0abfc,#fde68a); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  header p { margin:8px 0 0; color:var(--muted); font-size:15px; }
+  main { max-width:980px; margin:0 auto; padding:24px 16px 48px; display:grid; gap:20px; grid-template-columns:1.15fr .85fr; align-items:start; }
+  @media (max-width:760px){ main { grid-template-columns:1fr; } }
+  .card {
+    background:var(--card); border:1px solid var(--card-border); border-radius:20px; padding:24px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 20px 50px -20px rgba(0,0,0,.6);
+    animation:rise .4s ease both;
+  }
+  @keyframes rise { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:none; } }
+  h2 { margin:0 0 16px; font-size:19px; font-weight:700; }
+  label { display:block; font-size:13px; color:var(--muted); margin:0 0 6px; }
+  input {
+    width:100%; padding:12px 14px; margin-bottom:14px; border:1px solid var(--card-border); border-radius:12px;
+    background:var(--input); color:var(--text); font:inherit; font-size:15px; outline:none; transition:border-color .2s, box-shadow .2s;
+  }
+  input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(99,102,241,.25); }
+  button {
+    padding:12px 18px; border:0; border-radius:12px; font:inherit; font-size:15px; font-weight:600; cursor:pointer; color:#fff;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));
+    box-shadow:0 8px 20px -8px rgba(139,92,246,.8); transition:transform .15s, box-shadow .15s, filter .15s;
+  }
+  button:hover { transform:translateY(-2px); filter:brightness(1.08); }
+  button:active { transform:translateY(0) scale(.97); }
+  button.secondary { background:rgba(255,255,255,.08); border:1px solid var(--card-border); box-shadow:none; }
+  button:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .row > button { flex:1; min-width:130px; }
+  .hello { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
+  .hello h2 { margin:0; }
+  .avatar {
+    width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:18px;
+    background:linear-gradient(135deg,var(--primary),var(--primary2)); flex-shrink:0;
+  }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+  .stat { background:rgba(255,255,255,.05); border:1px solid var(--card-border); border-radius:16px; padding:14px 16px; }
+  .stat b { display:block; font-size:32px; font-weight:800; line-height:1.1; }
+  .stat span { color:var(--muted); font-size:13px; }
+  .stat.score b { color:var(--gold); }
+  .stat.turns b { color:#a5b4fc; }
+  .pick { color:var(--muted); font-size:14px; margin:0 0 10px; }
+  .numbers { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .numbers button {
+    aspect-ratio:1; padding:0; font-size:clamp(22px,4vw,30px); font-weight:800; border-radius:16px; min-width:0;
+    background:rgba(255,255,255,.07); border:1px solid var(--card-border); box-shadow:none;
+  }
+  .numbers button:hover { background:linear-gradient(135deg,var(--primary),var(--primary2)); box-shadow:0 10px 24px -8px rgba(139,92,246,.9); }
+  #result {
+    min-height:58px; margin:18px 0; padding:14px 16px; border-radius:14px; font-weight:600; font-size:15px;
+    background:rgba(255,255,255,.04); border:1px dashed var(--card-border); color:var(--muted);
+    display:flex; align-items:center;
+  }
+  #result.win { color:#dcfce7; background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.5); animation:pop .45s ease; }
+  #result.lose { color:#ffe4e6; background:rgba(244,63,94,.12); border:1px solid rgba(244,63,94,.45); animation:shake .4s ease; }
+  @keyframes pop { 0%{transform:scale(.9)} 60%{transform:scale(1.04)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:none} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  table { width:100%; border-collapse:separate; border-spacing:0 6px; font-size:15px; }
+  th { color:var(--muted); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; text-align:left; padding:0 12px 4px; }
+  td { padding:11px 12px; background:rgba(255,255,255,.05); }
+  td:first-child { border-radius:12px 0 0 12px; width:52px; font-weight:800; text-align:center; }
+  td:last-child { border-radius:0 12px 12px 0; text-align:right; font-weight:700; color:var(--gold); }
+  th:last-child { text-align:right; }
+  tr.top1 td { background:rgba(251,191,36,.16); }
+  tr.top2 td { background:rgba(203,213,225,.12); }
+  tr.top3 td { background:rgba(217,119,6,.14); }
+  td.empty { color:var(--muted); text-align:center; border-radius:12px; font-weight:500; }
+  #msg { color:#fda4af; font-size:14px; min-height:20px; margin:12px 0 0; }
+  .hidden { display:none !important; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:0 16px 32px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 Game Đoán Số</h1>
+  <p>Chọn một số từ 1 đến 5. Đoán trúng số của server để ghi điểm!</p>
+</header>
+<main>
+  <section class="card" id="authCard">
+    <h2>Đăng nhập để chơi</h2>
+    <label for="username">Username</label>
+    <input id="username" placeholder="vd: manh" autocomplete="username">
+    <label for="email">Email <span style="opacity:.7">(chỉ cần khi đăng ký)</span></label>
+    <input id="email" placeholder="vd: manh@example.com" autocomplete="email">
+    <label for="password">Mật khẩu</label>
+    <input id="password" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="current-password">
+    <div class="row">
+      <button onclick="login()">Đăng nhập</button>
+      <button class="secondary" onclick="register()">Đăng ký</button>
+    </div>
+    <p id="msg"></p>
+  </section>
+
+  <section class="card hidden" id="gameCard">
+    <div class="hello">
+      <h2>Xin chào, <span id="meName"></span> 👋</h2>
+      <div class="avatar" id="avatar">?</div>
+    </div>
+    <div class="stats">
+      <div class="stat score"><b id="meScore">0</b><span>⭐ Điểm</span></div>
+      <div class="stat turns"><b id="meTurns">0</b><span>🎟️ Lượt còn lại</span></div>
+    </div>
+    <p class="pick">Chọn số của bạn:</p>
+    <div class="numbers" id="numbers"></div>
+    <div id="result">Kết quả sẽ hiện ở đây</div>
+    <div class="row">
+      <button onclick="buyTurns()">🛒 Mua thêm 5 lượt</button>
+      <button class="secondary" onclick="logout()">Đăng xuất</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🏆 Bảng xếp hạng</h2>
+    <table><thead><tr><th>#</th><th>Người chơi</th><th>Điểm</th></tr></thead><tbody id="board"></tbody></table>
+  </section>
+</main>
+<footer>Java 17 · Spring Boot 3 · JWT</footer>
+<script>
+  const $ = id => document.getElementById(id);
+  let token = null;
+  try { token = localStorage.getItem('token'); } catch (e) {}
+
+  async function api(path, options = {}) {
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (token) headers.Authorization = 'Bearer ' + token;
+    const res = await fetch(path, { ...options, headers });
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401 && token && path !== '/login') { logout(); }
+    if (!res.ok) throw new Error(body.message || ('Lỗi ' + res.status));
+    return body;
+  }
+
+  function showMsg(text) { $('msg').textContent = text || ''; }
+
+  async function register() {
+    try {
+      await api('/register', { method: 'POST', body: JSON.stringify({
+        username: $('username').value, email: $('email').value, password: $('password').value }) });
+      showMsg('Đăng ký thành công, đang đăng nhập...');
+      await login();
+    } catch (e) { showMsg(e.message); }
+  }
+
+  async function login() {
+    try {
+      const data = await api('/login', { method: 'POST', body: JSON.stringify({
+        username: $('username').value, password: $('password').value }) });
+      token = data.accessToken;
+      try { localStorage.setItem('token', token); } catch (e) {}
+      showMsg('');
+      await refreshMe();
+    } catch (e) { showMsg(e.message); }
+  }
+
+  function logout() {
+    token = null;
+    try { localStorage.removeItem('token'); } catch (e) {}
+    $('gameCard').classList.add('hidden');
+    $('authCard').classList.remove('hidden');
+  }
+
+  function renderMe(me) {
+    $('meName').textContent = me.username;
+    $('avatar').textContent = (me.username || '?').charAt(0).toUpperCase();
+    $('meScore').textContent = me.score;
+    $('meTurns').textContent = me.turns;
+    $('authCard').classList.add('hidden');
+    $('gameCard').classList.remove('hidden');
+  }
+
+  async function refreshMe() {
+    if (!token) return;
+    try { renderMe(await api('/me')); } catch (e) { /* token hết hạn -> đã logout */ }
+  }
+
+  async function guess(n) {
+    const buttons = document.querySelectorAll('#numbers button');
+    buttons.forEach(b => b.disabled = true);
+    try {
+      const r = await api('/guess', { method: 'POST', body: JSON.stringify({ number: n }) });
+      $('result').className = '';
+      void $('result').offsetWidth;
+      $('result').className = r.correct ? 'win' : 'lose';
+      $('result').textContent = r.correct
+        ? `🎉 Chính xác! Server ra số ${r.serverNumber}. +1 điểm`
+        : `😢 Sai rồi. Bạn đoán ${r.guess}, server ra số ${r.serverNumber}.`;
+      $('meScore').textContent = r.score;
+      $('meTurns').textContent = r.turns;
+      loadBoard();
+    } catch (e) {
+      $('result').className = 'lose';
+      $('result').textContent = e.message;
+    } finally {
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+
+  async function buyTurns() {
+    try {
+      const key = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+      const r = await api('/buy-turns', { method: 'POST', headers: { 'Idempotency-Key': key } });
+      $('meTurns').textContent = r.turns;
+      $('result').className = 'win';
+      $('result').textContent = `🛒 Đã mua thêm ${r.addedTurns} lượt.`;
+    } catch (e) { $('result').textContent = e.message; }
+  }
+
+  async function loadBoard() {
+    try {
+      const rows = await api('/leaderboard');
+      $('board').innerHTML = '';
+      if (!rows.length) {
+        $('board').innerHTML = '<tr><td colspan="3" class="empty">Chưa có người chơi</td></tr>';
+        return;
+      }
+      const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        if (r.rank <= 3) tr.className = 'top' + r.rank;
+        [medals[r.rank] || r.rank, r.username, r.score].forEach(v => {
+          const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+        });
+        $('board').appendChild(tr);
+      });
+    } catch (e) {}
+  }
+
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.textContent = i; b.onclick = () => guess(i);
+    $('numbers').appendChild(b);
+  }
+  refreshMe();
+  loadBoard();
+</script>
+</body>
+</html>

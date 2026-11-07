@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: guess-game
+  # Mặc định dùng H2 (file) để chạy ngay không cần cài DB.
+  # Chạy với MySQL: --spring.profiles.active=mysql
+  datasource:
+    url: jdbc:h2:file:./data/guessgame;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  cache:
+    type: caffeine
+    cache-names: leaderboard
+    caffeine:
+      # Leaderboard được cache 5 giây: chịu tải lớn mà vẫn gần như real-time
+      spec: maximumSize=10,expireAfterWrite=5s
+
+app:
+  jwt:
+    # Đổi bằng biến môi trường JWT_SECRET khi chạy thật (tối thiểu 32 ký tự)
+    secret: ${JWT_SECRET:change-me-this-is-a-dev-secret-key-at-least-32-bytes}
+    expiration-minutes: 60
+  game:
+    win-rate: 0.05
+    turns-per-purchase: 5
+    initial-turns: 5
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/guessgame?createDatabaseIfNotExist=true}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+  h2:
+    console:
+      enabled: false
